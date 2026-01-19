@@ -90,3 +90,45 @@ coverage/
 *.pem
 *.key
 secrets/
+
+# ===================
+# Authorization Project
+# ===================
+authorization/dist/
+authorization/node_modules/
+authorization/css/
+
+# ===================
+# Data Catalog Project
+# ===================
+data_catalog/dist/
+data_catalog/node_modules/
+
+# ===================
+# AI Ops UI Project
+# ===================
+ai-ops-ui/dist/
+ai-ops-ui/node_modules/
+
+# ===================
+# Data Pipeline Project
+# ===================
+data_pipeline/frontend/dist/
+data_pipeline/frontend/node_modules/
+data_pipeline/db/
+data_pipeline/training/data/
+data_pipeline/training/models/
+data_pipeline/training/__pycache__/
+
+# ===================
+# Package Lock (optional - 포함하려면 주석 해제)
+# ===================
+# package-lock.json
+
+# ===================
+# Misc
+# ===================
+*.map
+.cache/
+.temp/
+.tmp/
