@@ -3,11 +3,9 @@
 # ============================================
 
 # ===================
-# Dependencies
+# Dependencies (용량 최대 주범!)
 # ===================
 node_modules/
-vendor/
-.pnpm-store/
 
 # ===================
 # Build Outputs
@@ -18,32 +16,39 @@ build/
 *.local
 
 # ===================
-# IDE / Editor
+# Go Binaries
 # ===================
-.vscode/
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea/
-*.swp
-*.swo
-*.sw?
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.iml
+data_pipeline/backend/main
+data_pipeline/backend/server
+data_pipeline/backend/bin/
 
 # ===================
-# OS Generated
+# Python
 # ===================
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+
+# ===================
+# TypeScript Build
+# ===================
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+
+# ===================
+# ML/Training 큰 파일
+# ===================
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.h5
+wandb/
+mlruns/
 
 # ===================
 # Logs
@@ -51,129 +56,37 @@ desktop.ini
 logs/
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
 # ===================
-# Environment Files
+# Environment
 # ===================
 .env
 .env.local
-.env.development
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
 # ===================
-# Python
+# IDE / Editor
 # ===================
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info/
-.eggs/
-*.egg
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
-.mypy_cache/
-.ruff_cache/
-venv/
-.venv/
-ENV/
-env/
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # ===================
-# Go
+# OS
 # ===================
-# Binary outputs
-data_pipeline/backend/main
-data_pipeline/backend/server
-data_pipeline/backend/bin/server
+.DS_Store
+Thumbs.db
 
 # ===================
-# TypeScript Build Info
+# Test
 # ===================
-*.tsbuildinfo
-tsconfig.tsbuildinfo
-tsconfig.node.tsbuildinfo
-
-# Generated config files
-vite.config.d.ts
-vite.config.js
-*.d.ts.map
-
-# ===================
-# ML / Training
-# ===================
-# Model checkpoints (usually large)
-*.pt
-*.pth
-*.ckpt
-*.safetensors
-*.bin
-*.onnx
-
-# Large data files
-*.csv
-*.parquet
-*.arrow
-*.h5
-*.hdf5
-!**/Sample/*.csv
-
-# Training outputs
-data_pipeline/training/data/*
-!data_pipeline/training/data/.gitkeep
-data_pipeline/training/models/*
-!data_pipeline/training/models/.gitkeep
-
-# Weights & Biases
-wandb/
-
-# MLflow
-mlruns/
-
-# ===================
-# Docker
-# ===================
-*.tar
-.docker/
-
-# ===================
-# Kubernetes
-# ===================
-*.kubeconfig
-kubeconfig
-
-# ===================
-# Misc
-# ===================
-.cache/
-tmp/
-temp/
-*.tmp
-*.temp
-*.bak
-*.backup
-
-# Test coverage
 coverage/
-.nyc_output/
+.pytest_cache/
 
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb_checkpoints
-
-# Secrets (never commit!)
+# ===================
+# Secrets
+# ===================
 *.pem
 *.key
-*.crt
 secrets/
-credentials/
