@@ -41,19 +41,19 @@
 - 전체 시스템
     - Dag페이지
     
-    ![image.png](img/dag_page.png)
+    ![image.png](data_pipeline/img/dag_page.png)
     
     - Code Section
     
-    ![image.png](img/code_section.png)
+    ![image.png](data_pipeline/img/code_section.png)
     
     - 모니터링 시스템
     
-    ![image.png](img/mornitoring.png)
+    ![image.png](data_pipeline/img/mornitoring.png)
     
 - ERD
 
-![image.png](img/erd.png)
+![image.png](data_pipeline/img/erd.png)
 
 ## 포트폴리오
 
@@ -78,32 +78,32 @@
         - Ollama
 - 프로그램 구조
 
-![image.png](img/program_structure.png)
+![image.png](data_pipeline/img/program_structure.png)
 
 - 프로그램
     - AI Agent
     
-    ![image.png](img/ai_agent.png)
+    ![image.png](data_pipeline/img/ai_agent.png)
     
     - 코드 작성
     
-    ![image.png](img/agent_code.png)
+    ![image.png](data_pipeline/img/agent_code.png)
     
 - 노드 연결
     
-    ![image.png](img/node.png)
+    ![image.png](data_pipeline/img/node.png)
     
 - 성공 메시지
     
-    ![image.png](img/message.png)
+    ![image.png](data_pipeline/img/message.png)
     
 - 파일 적재
     
-    ![image.png](img/save.png)
+    ![image.png](data_pipeline/img/save.png)
     
 - 학습 자동화
 
-  ![image.png](img/automation.png)
+  ![image.png]data_pipeline/(img/automation.png)
 
 ### Kubernetes 기능 분석
 
@@ -131,7 +131,7 @@ cd ~/Demo_Project/data_pipeline/k8s && ./deploy.sh
 kubectl get pods -n data-pipeline
 ```
 
-![image.png](img/deploy.png)
+![image.png](data_pipeline/img/deploy.png)
 
 - 포트포워딩 설정
 
