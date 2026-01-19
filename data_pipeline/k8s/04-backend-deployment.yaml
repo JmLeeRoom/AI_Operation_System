@@ -1,0 +1,218 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: data-pipeline
+  labels:
+    app: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: data-pipeline
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      serviceAccountName: backend-sa
+      containers:
+      - name: backend
+        image: data-pipeline-backend:v1.4.0
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+          name: http
+        volumeMounts:
+        - name: sample-data
+          mountPath: /data/sample
+        env:
+        # Database configuration from ConfigMap
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_PASSWORD
+        - name: DB_SSLMODE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_SSLMODE
+        # Server configuration
+        - name: SERVER_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SERVER_PORT
+        - name: SERVER_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SERVER_HOST
+        # Logging configuration
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: LOG_LEVEL
+        - name: LOG_FORMAT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: LOG_FORMAT
+        # Kubernetes configuration
+        - name: K8S_IN_CLUSTER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: K8S_IN_CLUSTER
+        - name: K8S_CONTEXT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: K8S_CONTEXT
+        - name: KAFKA_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: KAFKA_NAMESPACE
+        - name: KAFKA_CLUSTER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: KAFKA_CLUSTER
+        - name: KAFKA_BOOTSTRAP
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: KAFKA_BOOTSTRAP
+        # Jupyter configuration
+        - name: JUPYTER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: JUPYTER_URL
+        - name: JUPYTER_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: JUPYTER_API_URL
+        - name: JUPYTER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: JUPYTER_TOKEN
+        # Ollama configuration
+        - name: OLLAMA_URL
+          value: "http://ollama-service:11434"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: sample-data
+        hostPath:
+          path: /data/sample
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa
+  namespace: data-pipeline
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backend-k8s-access
+rules:
+- apiGroups: [""]
+  resources: ["namespaces", "pods", "services", "configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["kafka.strimzi.io"]
+  resources: ["kafkas", "kafkatopics", "kafkausers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["serving.knative.dev"]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["eventing.knative.dev"]
+  resources: ["kafkasinks"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["sources.knative.dev"]
+  resources: ["kafkasources"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backend-k8s-access-binding
+subjects:
+- kind: ServiceAccount
+  name: backend-sa
+  namespace: data-pipeline
+roleRef:
+  kind: ClusterRole
+  name: backend-k8s-access
+  apiGroup: rbac.authorization.k8s.io

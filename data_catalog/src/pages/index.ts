@@ -1,0 +1,11 @@
+export { default as Dashboard } from './Dashboard';
+export { default as Catalogs } from './Catalogs';
+export { default as Tables } from './Tables';
+export { default as TableDetail } from './TableDetail';
+export { default as Search } from './Search';
+export { default as Trending } from './Trending';
+export { default as Lineage } from './Lineage';
+export { default as Tags } from './Tags';
+export { default as Owners } from './Owners';
+export { default as Glossary } from './Glossary';
+export { default as Settings } from './Settings';

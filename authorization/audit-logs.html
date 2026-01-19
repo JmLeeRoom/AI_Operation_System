@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>감사 로그 - AuthZ Platform</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Audit Logs Page Specific Styles */
+    .page-header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    /* Stats Bar */
+    .audit-stats-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    @media (max-width: 1200px) {
+      .audit-stats-bar {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .audit-stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .audit-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .audit-stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .audit-stat-icon.total {
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--accent-primary);
+    }
+
+    .audit-stat-icon.allow {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-success);
+    }
+
+    .audit-stat-icon.deny {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-danger);
+    }
+
+    .audit-stat-icon.auth {
+      background: rgba(14, 165, 233, 0.15);
+      color: var(--accent-secondary);
+    }
+
+    .audit-stat-icon.error {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-warning);
+    }
+
+    .audit-stat-info {
+      flex: 1;
+    }
+
+    .audit-stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+    }
+
+    .audit-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Filter Section */
+    .filter-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: var(--spacing-md);
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .filter-group label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .date-range-inputs {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .date-range-inputs span {
+      color: var(--text-muted);
+    }
+
+    /* Log Entry Styles */
+    .log-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-md);
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--border-primary);
+      transition: background var(--transition-fast);
+    }
+
+    .log-entry:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-status-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .log-status-icon.allow {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-success);
+    }
+
+    .log-status-icon.deny {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-danger);
+    }
+
+    .log-status-icon.auth {
+      background: rgba(14, 165, 233, 0.15);
+      color: var(--accent-secondary);
+    }
+
+    .log-status-icon.create {
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--accent-primary);
+    }
+
+    .log-status-icon.update {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-tertiary);
+    }
+
+    .log-status-icon.delete {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-danger);
+    }
+
+    .log-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .log-title {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .log-title .highlight {
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .log-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .log-detail-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .log-detail-item svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .log-resource {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      margin-top: var(--spacing-xs);
+      display: inline-block;
+      color: var(--text-secondary);
+    }
+
+    .log-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .log-time {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .log-decision {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .log-decision.allow {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-success);
+    }
+
+    .log-decision.deny {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-danger);
+    }
+
+    /* Timeline View */
+    .timeline-view {
+      position: relative;
+      padding-left: var(--spacing-xl);
+    }
+
+    .timeline-view::before {
+      content: '';
+      position: absolute;
+      left: 18px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border-primary);
+    }
+
+    .timeline-entry {
+      position: relative;
+      padding: var(--spacing-md) 0;
+      padding-left: var(--spacing-lg);
+    }
+
+    .timeline-entry::before {
+      content: '';
+      position: absolute;
+      left: -26px;
+      top: 22px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      border: 2px solid var(--bg-secondary);
+    }
+
+    .timeline-entry.deny::before {
+      background: var(--accent-danger);
+    }
+
+    .timeline-entry.auth::before {
+      background: var(--accent-secondary);
+    }
+
+    .timeline-date-header {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: var(--spacing-sm);
+      padding-left: 6px;
+    }
+
+    /* Real-time indicator */
+    .realtime-indicator {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm) var(--spacing-md);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: var(--radius-full);
+      font-size: 0.8125rem;
+      color: var(--accent-success);
+    }
+
+    .realtime-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-success);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Log Detail Panel */
+    .log-detail-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 520px;
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border-primary);
+      z-index: 200;
+      transform: translateX(100%);
+      transition: transform var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .log-detail-panel.active {
+      transform: translateX(0);
+    }
+
+    .panel-header {
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--border-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .panel-close {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .panel-close:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-lg);
+    }
+
+    .log-detail-section {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .log-detail-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .log-detail-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .log-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--spacing-sm) 0;
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .log-detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .log-detail-label {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .log-detail-value {
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: right;
+      max-width: 60%;
+      word-break: break-all;
+    }
+
+    /* Raw JSON */
+    .raw-json {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      max-height: 200px;
+      overflow-y: auto;
+      color: var(--text-secondary);
+    }
+
+    /* Panel Overlay */
+    .panel-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 199;
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-normal);
+    }
+
+    .panel-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="sidebar-title">
+          <h1>AuthZ Platform</h1>
+          <span>Authorization Management</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">메인</div>
+          <a href="dashboard.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="9"/>
+              <rect x="14" y="3" width="7" height="5"/>
+              <rect x="14" y="12" width="7" height="9"/>
+              <rect x="3" y="16" width="7" height="5"/>
+            </svg>
+            대시보드
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Identity 관리</div>
+          <a href="users.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            사용자 관리
+            <span class="nav-badge">156</span>
+          </a>
+          <a href="groups.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            그룹 관리
+          </a>
+          <a href="departments.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            부서 관리
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">권한 관리</div>
+          <a href="roles.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            역할 관리
+          </a>
+          <a href="policies.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            정책 관리
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">모니터링</div>
+          <a href="audit-logs.html" class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            감사 로그
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">JL</div>
+          <div class="user-info">
+            <div class="user-name">이재명</div>
+            <div class="user-role">시스템 관리자</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <span class="breadcrumb-item">홈</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item">모니터링</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active">감사 로그</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="realtime-indicator">
+            <span class="realtime-dot"></span>
+            실시간 모니터링
+          </div>
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" placeholder="로그 검색...">
+          </div>
+          <button class="header-icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notification-dot"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Page Header with Actions -->
+        <div class="page-header-actions">
+          <div>
+            <h1 class="page-title">감사 로그</h1>
+            <p class="page-subtitle">인증/인가 이벤트와 정책 평가 결과를 모니터링합니다</p>
+          </div>
+          <div class="flex gap-md">
+            <button class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              내보내기
+            </button>
+            <button class="btn btn-ghost">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"/>
+                <polyline points="23 20 23 14 17 14"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              </svg>
+              새로고침
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="audit-stats-bar">
+          <div class="audit-stat stagger-item">
+            <div class="audit-stat-icon total">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div class="audit-stat-info">
+              <div class="audit-stat-value">24,847</div>
+              <div class="audit-stat-label">오늘 총 요청</div>
+            </div>
+          </div>
+          <div class="audit-stat stagger-item">
+            <div class="audit-stat-icon allow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div class="audit-stat-info">
+              <div class="audit-stat-value">23,512</div>
+              <div class="audit-stat-label">허용 (ALLOW)</div>
+            </div>
+          </div>
+          <div class="audit-stat stagger-item">
+            <div class="audit-stat-icon deny">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+            </div>
+            <div class="audit-stat-info">
+              <div class="audit-stat-value">1,287</div>
+              <div class="audit-stat-label">거부 (DENY)</div>
+            </div>
+          </div>
+          <div class="audit-stat stagger-item">
+            <div class="audit-stat-icon auth">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="audit-stat-info">
+              <div class="audit-stat-value">892</div>
+              <div class="audit-stat-label">인증 이벤트</div>
+            </div>
+          </div>
+          <div class="audit-stat stagger-item">
+            <div class="audit-stat-icon error">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="audit-stat-info">
+              <div class="audit-stat-value">48</div>
+              <div class="audit-stat-label">오류</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label>이벤트 유형</label>
+              <select class="form-select" style="min-width: 140px;">
+                <option>전체</option>
+                <option>인가 (AuthZ)</option>
+                <option>인증 (AuthN)</option>
+                <option>정책 변경</option>
+                <option>사용자 관리</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>결과</label>
+              <select class="form-select" style="min-width: 120px;">
+                <option>전체</option>
+                <option>ALLOW</option>
+                <option>DENY</option>
+                <option>ERROR</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>사용자</label>
+              <input type="text" class="form-input" style="width: 180px;" placeholder="사용자 ID 또는 이메일">
+            </div>
+            <div class="filter-group">
+              <label>기간</label>
+              <div class="date-range-inputs">
+                <input type="date" class="form-input" style="width: 140px;" value="2026-01-17">
+                <span>~</span>
+                <input type="date" class="form-input" style="width: 140px;" value="2026-01-17">
+              </div>
+            </div>
+            <button class="btn btn-primary" style="margin-left: auto;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              검색
+            </button>
+          </div>
+        </div>
+
+        <!-- Log List -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">최근 로그</h3>
+            <div class="flex gap-sm">
+              <button class="btn btn-ghost btn-sm">타임라인</button>
+              <button class="btn btn-secondary btn-sm">목록</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <!-- Log Entries -->
+            <div class="log-entry stagger-item" onclick="openPanel()">
+              <div class="log-status-icon allow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="log-content">
+                <div class="log-title">
+                  <span class="highlight">kim.cs@company.com</span>이 <span class="highlight">s3:GetObject</span> 요청 - 허용됨
+                </div>
+                <div class="log-details">
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    </svg>
+                    S3-DataLake-ReadOnly
+                  </span>
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                    192.168.1.45
+                  </span>
+                </div>
+                <code class="log-resource">data-lake/analytics/2026/01/sales_report.parquet</code>
+              </div>
+              <div class="log-meta">
+                <span class="log-time">14:32:45</span>
+                <span class="log-decision allow">ALLOW</span>
+              </div>
+            </div>
+
+            <div class="log-entry stagger-item">
+              <div class="log-status-icon deny">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="15" y1="9" x2="9" y2="15"/>
+                  <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+              </div>
+              <div class="log-content">
+                <div class="log-title">
+                  <span class="highlight">jung.hn@company.com</span>이 <span class="highlight">s3:DeleteObject</span> 요청 - 거부됨
+                </div>
+                <div class="log-details">
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    </svg>
+                    권한 없음 (Viewer 역할)
+                  </span>
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                    192.168.1.102
+                  </span>
+                </div>
+                <code class="log-resource">dev-bucket/temp/test-file.txt</code>
+              </div>
+              <div class="log-meta">
+                <span class="log-time">14:28:12</span>
+                <span class="log-decision deny">DENY</span>
+              </div>
+            </div>
+
+            <div class="log-entry stagger-item">
+              <div class="log-status-icon auth">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                  <polyline points="10 17 15 12 10 7"/>
+                  <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+              </div>
+              <div class="log-content">
+                <div class="log-title">
+                  <span class="highlight">park.yh@company.com</span> 로그인 성공
+                </div>
+                <div class="log-details">
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Keycloak SSO
+                  </span>
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                    10.0.0.55
+                  </span>
+                </div>
+              </div>
+              <div class="log-meta">
+                <span class="log-time">14:15:33</span>
+                <span class="badge badge-secondary">AUTH</span>
+              </div>
+            </div>
+
+            <div class="log-entry stagger-item">
+              <div class="log-status-icon create">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </div>
+              <div class="log-content">
+                <div class="log-title">
+                  정책 <span class="highlight">K8s-Deploy-Staging</span> 생성됨
+                </div>
+                <div class="log-details">
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    lee.ms@company.com
+                  </span>
+                </div>
+              </div>
+              <div class="log-meta">
+                <span class="log-time">13:45:22</span>
+                <span class="badge badge-primary">CREATE</span>
+              </div>
+            </div>
+
+            <div class="log-entry stagger-item">
+              <div class="log-status-icon allow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="log-content">
+                <div class="log-title">
+                  <span class="highlight">choi.sy@company.com</span>이 <span class="highlight">db:select</span> 요청 - 허용됨
+                </div>
+                <div class="log-details">
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    </svg>
+                    DWH-Analytics-Read
+                  </span>
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                    192.168.2.78
+                  </span>
+                </div>
+                <code class="log-resource">analytics.user_metrics</code>
+              </div>
+              <div class="log-meta">
+                <span class="log-time">13:22:08</span>
+                <span class="log-decision allow">ALLOW</span>
+              </div>
+            </div>
+
+            <div class="log-entry stagger-item">
+              <div class="log-status-icon update">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </div>
+              <div class="log-content">
+                <div class="log-title">
+                  역할 <span class="highlight">DataAnalyst</span>에 정책 추가됨
+                </div>
+                <div class="log-details">
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    admin@company.com
+                  </span>
+                  <span class="log-detail-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    </svg>
+                    BI-Dashboard-Read
+                  </span>
+                </div>
+              </div>
+              <div class="log-meta">
+                <span class="log-time">12:58:41</span>
+                <span class="badge" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-tertiary);">UPDATE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div class="card-footer">
+            <div class="pagination">
+              <div class="pagination-info">
+                전체 <strong>24,847</strong>건 중 <strong>1-20</strong> 표시
+              </div>
+              <div class="pagination-controls">
+                <button class="pagination-btn" disabled>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+                <button class="pagination-btn active">1</button>
+                <button class="pagination-btn">2</button>
+                <button class="pagination-btn">3</button>
+                <button class="pagination-btn">...</button>
+                <button class="pagination-btn">1243</button>
+                <button class="pagination-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Panel Overlay -->
+    <div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+
+    <!-- Log Detail Panel -->
+    <aside class="log-detail-panel" id="logPanel">
+      <div class="panel-header">
+        <h2 class="panel-title">로그 상세</h2>
+        <button class="panel-close" onclick="closePanel()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="panel-body">
+        <!-- Decision Badge -->
+        <div style="text-align: center; margin-bottom: var(--spacing-xl);">
+          <span class="log-decision allow" style="font-size: 1rem; padding: 8px 24px;">ALLOW</span>
+        </div>
+
+        <!-- Basic Info -->
+        <div class="log-detail-section">
+          <h4 class="log-detail-title">요청 정보</h4>
+          <div class="log-detail-row">
+            <span class="log-detail-label">이벤트 ID</span>
+            <span class="log-detail-value font-mono">evt_8a7f6e5d4c3b2a1z</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">타임스탬프</span>
+            <span class="log-detail-value">2026-01-17 14:32:45.123</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">이벤트 유형</span>
+            <span class="log-detail-value">Authorization Decision</span>
+          </div>
+        </div>
+
+        <!-- Subject Info -->
+        <div class="log-detail-section">
+          <h4 class="log-detail-title">주체 (Subject)</h4>
+          <div class="log-detail-row">
+            <span class="log-detail-label">사용자</span>
+            <span class="log-detail-value">kim.cs@company.com</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">사용자 ID</span>
+            <span class="log-detail-value font-mono">usr_8a7f6e5d4c3b</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">역할</span>
+            <span class="log-detail-value">Developer, DataAnalyst</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">IP 주소</span>
+            <span class="log-detail-value font-mono">192.168.1.45</span>
+          </div>
+        </div>
+
+        <!-- Action Info -->
+        <div class="log-detail-section">
+          <h4 class="log-detail-title">액션 (Action)</h4>
+          <div class="log-detail-row">
+            <span class="log-detail-label">서비스</span>
+            <span class="log-detail-value">S3/MinIO</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">액션</span>
+            <span class="log-detail-value font-mono">s3:GetObject</span>
+          </div>
+        </div>
+
+        <!-- Resource Info -->
+        <div class="log-detail-section">
+          <h4 class="log-detail-title">리소스 (Resource)</h4>
+          <div class="log-detail-row">
+            <span class="log-detail-label">버킷</span>
+            <span class="log-detail-value">data-lake</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">객체 경로</span>
+            <span class="log-detail-value font-mono" style="font-size: 0.75rem;">analytics/2026/01/sales_report.parquet</span>
+          </div>
+        </div>
+
+        <!-- Policy Info -->
+        <div class="log-detail-section">
+          <h4 class="log-detail-title">평가된 정책</h4>
+          <div class="log-detail-row">
+            <span class="log-detail-label">정책명</span>
+            <span class="log-detail-value">S3-DataLake-ReadOnly</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">정책 ID</span>
+            <span class="log-detail-value font-mono">pol_8a7f6e5d4c3b</span>
+          </div>
+          <div class="log-detail-row">
+            <span class="log-detail-label">평가 시간</span>
+            <span class="log-detail-value">2.3ms</span>
+          </div>
+        </div>
+
+        <!-- Raw JSON -->
+        <div class="log-detail-section">
+          <h4 class="log-detail-title">Raw JSON</h4>
+          <div class="raw-json">
+{
+  "id": "evt_8a7f6e5d4c3b2a1z",
+  "timestamp": "2026-01-17T14:32:45.123Z",
+  "type": "authorization.decision",
+  "decision": "ALLOW",
+  "subject": {
+    "user_id": "usr_8a7f6e5d4c3b",
+    "email": "kim.cs@company.com",
+    "roles": ["Developer", "DataAnalyst"]
+  },
+  "action": "s3:GetObject",
+  "resource": "arn:minio:s3:::data-lake/analytics/2026/01/sales_report.parquet",
+  "policy": {
+    "id": "pol_8a7f6e5d4c3b",
+    "name": "S3-DataLake-ReadOnly"
+  },
+  "context": {
+    "ip_address": "192.168.1.45",
+    "user_agent": "aws-sdk-go/1.44.0"
+  }
+}
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    function openPanel() {
+      document.getElementById('logPanel').classList.add('active');
+      document.getElementById('panelOverlay').classList.add('active');
+    }
+
+    function closePanel() {
+      document.getElementById('logPanel').classList.remove('active');
+      document.getElementById('panelOverlay').classList.remove('active');
+    }
+  </script>
+</body>
+</html>

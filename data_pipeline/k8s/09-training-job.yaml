@@ -1,0 +1,148 @@
+# Training Job for QLoRA Fine-tuning
+# This is a template - use with envsubst or helm to set variables
+# 
+# Usage:
+#   export RUN_ID=1
+#   export BASE_MODEL="codellama/CodeLlama-7b-hf"
+#   export DATASET_PATH="/data/datasets/codegen/v1.0"
+#   envsubst < 09-training-job.yaml | kubectl apply -f -
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: training-job-${RUN_ID:-1}
+  namespace: data-pipeline
+  labels:
+    app: training
+    run-id: "${RUN_ID:-1}"
+spec:
+  ttlSecondsAfterFinished: 86400  # Keep completed job for 24 hours
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: training
+        run-id: "${RUN_ID:-1}"
+    spec:
+      restartPolicy: Never
+      
+      # Node selector for GPU nodes
+      nodeSelector:
+        kubernetes.io/os: linux
+        # nvidia.com/gpu.present: "true"  # Uncomment if using GPU labels
+      
+      # Tolerations for GPU nodes
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      
+      containers:
+        - name: trainer
+          image: data-pipeline-training:latest
+          imagePullPolicy: IfNotPresent
+          
+          command:
+            - python3
+            - /app/scripts/train_qlora.py
+          
+          args:
+            - --base_model
+            - "${BASE_MODEL:-codellama/CodeLlama-7b-hf}"
+            - --dataset_path
+            - "${DATASET_PATH:-/data/datasets/codegen/v1.0}"
+            - --output_dir
+            - "/data/models/run_${RUN_ID:-1}"
+            - --num_epochs
+            - "${NUM_EPOCHS:-3}"
+            - --batch_size
+            - "${BATCH_SIZE:-4}"
+            - --learning_rate
+            - "${LEARNING_RATE:-2e-4}"
+            - --lora_r
+            - "${LORA_R:-16}"
+            - --lora_alpha
+            - "${LORA_ALPHA:-32}"
+          
+          env:
+            - name: CUDA_VISIBLE_DEVICES
+              value: "0,1"
+            - name: PYTORCH_CUDA_ALLOC_CONF
+              value: "max_split_size_mb:512"
+            - name: TRANSFORMERS_CACHE
+              value: "/data/cache/transformers"
+            - name: HF_HOME
+              value: "/data/cache/huggingface"
+            - name: RUN_ID
+              value: "${RUN_ID:-1}"
+          
+          resources:
+            requests:
+              memory: "32Gi"
+              cpu: "8"
+              nvidia.com/gpu: "2"
+            limits:
+              memory: "64Gi"
+              cpu: "16"
+              nvidia.com/gpu: "2"
+          
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+            - name: shm
+              mountPath: /dev/shm
+      
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: training-data-pvc
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "16Gi"
+
+---
+# PVC for training data (datasets, models, cache)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: training-data-pvc
+  namespace: data-pipeline
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard  # Change to your storage class
+  resources:
+    requests:
+      storage: 500Gi
+
+---
+# ConfigMap for training configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: training-config
+  namespace: data-pipeline
+data:
+  default_config.yaml: |
+    model:
+      base_model: "codellama/CodeLlama-7b-hf"
+      model_type: "qlora"
+    
+    lora:
+      r: 16
+      alpha: 32
+      dropout: 0.05
+    
+    training:
+      learning_rate: 2.0e-4
+      num_epochs: 3
+      batch_size: 4
+      gradient_accumulation_steps: 4
+      max_seq_length: 2048
+    
+    hardware:
+      device_map: "auto"
+      max_memory:
+        "0": "10GiB"
+        "1": "10GiB"

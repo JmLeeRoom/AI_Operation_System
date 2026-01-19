@@ -1,0 +1,643 @@
+.python-node-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.python-node-panel-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.python-node-panel {
+  position: relative;
+  background: #1e1e1e;
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 1200px;
+  height: 85vh;
+  max-height: 900px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: panelSlideIn 0.3s ease-out;
+  border: 1px solid #333;
+}
+
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.python-node-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.python-node-panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.python-node-panel-icon {
+  font-size: 32px;
+}
+
+.python-node-panel-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.python-node-panel-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.python-node-panel-close {
+  padding: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.python-node-panel-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.python-node-panel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #404040;
+}
+
+.python-node-panel-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #404040;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.python-node-panel-button:hover:not(:disabled) {
+  background: #505050;
+}
+
+.python-node-panel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.python-node-panel-button-save {
+  background: #10b981;
+}
+
+.python-node-panel-button-save:hover:not(:disabled) {
+  background: #059669;
+}
+
+.python-node-panel-button-run {
+  background: #3b82f6;
+}
+
+.python-node-panel-button-run:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.python-node-panel-button-ai {
+  background: #f59e0b;
+}
+
+.python-node-panel-button-ai:hover:not(:disabled) {
+  background: #d97706;
+}
+
+.python-node-panel-button-debug {
+  background: #8b5cf6;
+}
+
+.python-node-panel-button-debug:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.python-node-panel-button-continue {
+  background: #10b981;
+}
+
+.python-node-panel-button-continue:hover:not(:disabled) {
+  background: #059669;
+}
+
+.python-node-panel-breakpoint-count {
+  font-size: 11px;
+  color: #8b5cf6;
+  font-weight: 600;
+}
+
+.python-node-panel-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.python-node-panel-editor-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #404040;
+}
+
+.python-node-panel-editor-header {
+  padding: 8px 16px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #404040;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.python-node-panel-editor-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a0a0a0;
+  text-transform: uppercase;
+}
+
+.python-node-panel-editor-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Monaco Editor 브레이크포인트 스타일 */
+.monaco-editor .breakpoint-glyph::before {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: #f44336;
+  border-radius: 50%;
+  margin: 2px auto;
+  box-shadow: 0 0 4px rgba(244, 67, 54, 0.6);
+  cursor: pointer;
+}
+
+.monaco-editor .breakpoint-glyph:hover::before {
+  background: #ff6b6b;
+  box-shadow: 0 0 6px rgba(244, 67, 54, 0.8);
+}
+
+/* 현재 실행 라인 하이라이트 */
+.monaco-editor .current-line-highlight {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+  border-left: 3px solid #ffc107 !important;
+}
+
+/* 현재 실행 라인 화살표 */
+.monaco-editor .current-line-arrow::before {
+  content: '▶';
+  display: block;
+  color: #ffc107;
+  font-size: 10px;
+  line-height: 19px;
+  text-align: center;
+  width: 16px;
+  height: 19px;
+  margin: 0 auto;
+}
+
+.python-node-panel-editor-textarea {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border: none;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+}
+
+.python-node-panel-variables-wrapper {
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  background: #252525;
+  border-top: 1px solid #404040;
+  border-bottom: 1px solid #404040;
+}
+
+.python-node-panel-variables-header {
+  padding: 8px 16px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #404040;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.python-node-panel-variables-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a0a0a0;
+  text-transform: uppercase;
+}
+
+.python-node-panel-variables-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.python-node-panel-variable-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background: #1e1e1e;
+  border-radius: 4px;
+}
+
+.python-node-panel-variable-name {
+  color: #60a5fa;
+  font-weight: 600;
+  min-width: 100px;
+}
+
+.python-node-panel-variable-value {
+  color: #d4d4d4;
+  flex: 1;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.python-node-panel-variable-edit-btn {
+  background: transparent;
+  border: none;
+  color: #60a5fa;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.python-node-panel-variable-edit-btn:hover {
+  color: #93c5fd;
+}
+
+.python-node-panel-variable-edit {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  align-items: center;
+}
+
+.python-node-panel-variable-input {
+  flex: 1;
+  background: #1e1e1e;
+  border: 1px solid #404040;
+  color: #d4d4d4;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.python-node-panel-variable-save,
+.python-node-panel-variable-cancel {
+  background: #3b82f6;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.python-node-panel-variable-save:hover {
+  background: #2563eb;
+}
+
+.python-node-panel-variable-cancel {
+  background: #6b7280;
+}
+
+.python-node-panel-variable-cancel:hover {
+  background: #4b5563;
+}
+
+.python-node-panel-callstack-wrapper {
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  background: #252525;
+  border-top: 1px solid #404040;
+  border-bottom: 1px solid #404040;
+}
+
+.python-node-panel-callstack-header {
+  padding: 8px 16px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #404040;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.python-node-panel-callstack-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a0a0a0;
+  text-transform: uppercase;
+}
+
+.python-node-panel-callstack-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.python-node-panel-callstack-frame {
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  background: #1e1e1e;
+  border-radius: 4px;
+  border-left: 3px solid #6366f1;
+}
+
+.python-node-panel-callstack-frame-name {
+  color: #d4d4d4;
+}
+
+.python-node-panel-output-wrapper {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+}
+
+.python-node-panel-output-header {
+  padding: 8px 16px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #404040;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.python-node-panel-output-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a0a0a0;
+  text-transform: uppercase;
+}
+
+.python-node-panel-status-success {
+  color: #10b981;
+  font-size: 12px;
+}
+
+.python-node-panel-status-error {
+  color: #ef4444;
+  font-size: 12px;
+}
+
+.python-node-panel-status-loading {
+  color: #3b82f6;
+  font-size: 12px;
+}
+
+.python-node-panel-status-paused {
+  color: #8b5cf6;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.python-node-panel-output {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #d4d4d4;
+  white-space: pre-wrap;
+}
+
+.python-node-panel-output-placeholder {
+  color: #666;
+  font-style: italic;
+}
+
+/* AI Agent Modal */
+.python-node-panel-ai-modal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.python-node-panel-ai-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.python-node-panel-ai-modal {
+  position: relative;
+  background: #2d2d2d;
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #404040;
+}
+
+.python-node-panel-ai-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.python-node-panel-ai-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.python-node-panel-ai-modal-close {
+  padding: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.python-node-panel-ai-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.python-node-panel-ai-modal-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.python-node-panel-ai-modal-action-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.python-node-panel-ai-modal-action-selector button {
+  flex: 1;
+  padding: 10px 16px;
+  background: #404040;
+  color: #d4d4d4;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.python-node-panel-ai-modal-action-selector button:hover:not(:disabled) {
+  background: #505050;
+}
+
+.python-node-panel-ai-modal-action-selector button.active {
+  background: #f59e0b;
+  color: #ffffff;
+  border-color: #d97706;
+}
+
+.python-node-panel-ai-modal-action-selector button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.python-node-panel-ai-modal-instruction {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.python-node-panel-ai-modal-instruction label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #a0a0a0;
+}
+
+.python-node-panel-ai-modal-instruction textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  background: #1e1e1e;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  color: #d4d4d4;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  resize: vertical;
+  outline: none;
+}
+
+.python-node-panel-ai-modal-instruction textarea:focus {
+  border-color: #f59e0b;
+}
+
+.python-node-panel-ai-modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  background: #252525;
+  border-top: 1px solid #404040;
+}
+
+.python-node-panel-ai-modal-generate,
+.python-node-panel-ai-modal-cancel {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.python-node-panel-ai-modal-generate {
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+.python-node-panel-ai-modal-generate:hover:not(:disabled) {
+  background: #d97706;
+}
+
+.python-node-panel-ai-modal-generate:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.python-node-panel-ai-modal-cancel {
+  background: #404040;
+  color: #d4d4d4;
+}
+
+.python-node-panel-ai-modal-cancel:hover:not(:disabled) {
+  background: #505050;
+}

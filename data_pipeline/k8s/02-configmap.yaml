@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: data-pipeline
+data:
+  # Database configuration (PostgreSQL in K8s)
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "flow_db"
+  DB_USER: "flow_user"
+  DB_SSLMODE: "disable"
+
+  # Server configuration
+  SERVER_PORT: "8080"
+  SERVER_HOST: "0.0.0.0"
+
+  # Logging configuration
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+
+  # Kubernetes configuration
+  K8S_IN_CLUSTER: "true"
+  K8S_CONTEXT: ""
+  KAFKA_NAMESPACE: "kafka"
+  KAFKA_CLUSTER: "kafka-cluster"
+  KAFKA_BOOTSTRAP: "kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+
+  # Jupyter configuration
+  JUPYTER_URL: "http://jupyter-service:8888"
+  JUPYTER_API_URL: "http://jupyter-service:8888/api"

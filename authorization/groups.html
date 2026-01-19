@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>그룹 관리 - AuthZ Platform</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Groups Page Specific Styles */
+    .page-header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-lg);
+    }
+
+    @media (max-width: 1200px) {
+      .groups-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .groups-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .group-card {
+      background: var(--gradient-card);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      transition: all var(--transition-normal);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .group-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gradient-primary);
+      opacity: 0;
+      transition: opacity var(--transition-normal);
+    }
+
+    .group-card:hover {
+      border-color: var(--border-secondary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .group-card:hover::before {
+      opacity: 1;
+    }
+
+    .group-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .group-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-primary);
+    }
+
+    .group-icon.primary {
+      background: rgba(0, 212, 170, 0.15);
+    }
+
+    .group-icon.secondary {
+      background: rgba(14, 165, 233, 0.15);
+      color: var(--accent-secondary);
+    }
+
+    .group-icon.tertiary {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-tertiary);
+    }
+
+    .group-icon.warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-warning);
+    }
+
+    .group-actions {
+      display: flex;
+      gap: var(--spacing-xs);
+    }
+
+    .group-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-xs);
+      color: var(--text-primary);
+    }
+
+    .group-description {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: var(--spacing-md);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .group-stats {
+      display: flex;
+      gap: var(--spacing-lg);
+      padding-top: var(--spacing-md);
+      border-top: 1px solid var(--border-primary);
+    }
+
+    .group-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .group-stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+    }
+
+    .group-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .group-members-preview {
+      display: flex;
+      align-items: center;
+      margin-top: var(--spacing-md);
+    }
+
+    .member-avatar-stack {
+      display: flex;
+    }
+
+    .member-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-full);
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: var(--bg-primary);
+      border: 2px solid var(--bg-card);
+      margin-left: -8px;
+    }
+
+    .member-avatar:first-child {
+      margin-left: 0;
+    }
+
+    .member-avatar.more {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+    }
+
+    /* View Toggle */
+    .view-toggle {
+      display: flex;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      padding: 4px;
+    }
+
+    .view-toggle-btn {
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--bg-card);
+      color: var(--accent-primary);
+    }
+
+    .view-toggle-btn:hover:not(.active) {
+      color: var(--text-primary);
+    }
+
+    /* List View Styles */
+    .groups-list {
+      display: none;
+    }
+
+    .groups-list.active {
+      display: block;
+    }
+
+    .groups-grid.active {
+      display: grid;
+    }
+
+    .groups-grid:not(.active) {
+      display: none;
+    }
+
+    /* Empty State for Groups */
+    .group-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: var(--spacing-2xl);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="sidebar-title">
+          <h1>AuthZ Platform</h1>
+          <span>Authorization Management</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">메인</div>
+          <a href="dashboard.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="9"/>
+              <rect x="14" y="3" width="7" height="5"/>
+              <rect x="14" y="12" width="7" height="9"/>
+              <rect x="3" y="16" width="7" height="5"/>
+            </svg>
+            대시보드
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Identity 관리</div>
+          <a href="users.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            사용자 관리
+            <span class="nav-badge">156</span>
+          </a>
+          <a href="groups.html" class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            그룹 관리
+          </a>
+          <a href="departments.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            부서 관리
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">권한 관리</div>
+          <a href="roles.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            역할 관리
+          </a>
+          <a href="policies.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            정책 관리
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">모니터링</div>
+          <a href="audit-logs.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            감사 로그
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">JL</div>
+          <div class="user-info">
+            <div class="user-name">이재명</div>
+            <div class="user-role">시스템 관리자</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <span class="breadcrumb-item">홈</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item">Identity 관리</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active">그룹 관리</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" placeholder="그룹 검색...">
+          </div>
+          <button class="header-icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notification-dot"></span>
+          </button>
+          <button class="header-icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Page Header with Actions -->
+        <div class="page-header-actions">
+          <div>
+            <h1 class="page-title">그룹 관리</h1>
+            <p class="page-subtitle">사용자 그룹을 생성하고 관리합니다</p>
+          </div>
+          <div class="flex gap-md">
+            <div class="view-toggle">
+              <button class="view-toggle-btn active" id="gridViewBtn" onclick="setView('grid')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+              </button>
+              <button class="view-toggle-btn" id="listViewBtn" onclick="setView('list')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <button class="btn btn-primary" onclick="openModal()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              그룹 생성
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid View -->
+        <div class="groups-grid active" id="groupsGrid">
+          <div class="group-card stagger-item">
+            <div class="group-card-header">
+              <div class="group-icon primary">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="group-actions">
+                <button class="action-btn edit" title="수정">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="action-btn delete" title="삭제">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <h3 class="group-name">Backend Developers</h3>
+            <p class="group-description">백엔드 개발팀 그룹입니다. API 개발 및 서버 관리 권한이 할당됩니다.</p>
+            <div class="group-members-preview">
+              <div class="member-avatar-stack">
+                <div class="member-avatar">김철</div>
+                <div class="member-avatar" style="background: var(--gradient-secondary);">박영</div>
+                <div class="member-avatar" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">이민</div>
+                <div class="member-avatar more">+5</div>
+              </div>
+            </div>
+            <div class="group-stats">
+              <div class="group-stat">
+                <span class="group-stat-value">8</span>
+                <span class="group-stat-label">멤버</span>
+              </div>
+              <div class="group-stat">
+                <span class="group-stat-value">3</span>
+                <span class="group-stat-label">역할</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group-card stagger-item">
+            <div class="group-card-header">
+              <div class="group-icon secondary">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="group-actions">
+                <button class="action-btn edit" title="수정">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="action-btn delete" title="삭제">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <h3 class="group-name">Data Engineers</h3>
+            <p class="group-description">데이터 엔지니어링 팀. 데이터 파이프라인 및 ETL 작업 권한 보유.</p>
+            <div class="group-members-preview">
+              <div class="member-avatar-stack">
+                <div class="member-avatar" style="background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);">정하</div>
+                <div class="member-avatar" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">최서</div>
+                <div class="member-avatar more">+10</div>
+              </div>
+            </div>
+            <div class="group-stats">
+              <div class="group-stat">
+                <span class="group-stat-value">12</span>
+                <span class="group-stat-label">멤버</span>
+              </div>
+              <div class="group-stat">
+                <span class="group-stat-value">5</span>
+                <span class="group-stat-label">역할</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group-card stagger-item">
+            <div class="group-card-header">
+              <div class="group-icon tertiary">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="group-actions">
+                <button class="action-btn edit" title="수정">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="action-btn delete" title="삭제">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <h3 class="group-name">Security Team</h3>
+            <p class="group-description">보안팀 그룹. 보안 감사 및 접근 제어 관리 권한을 가집니다.</p>
+            <div class="group-members-preview">
+              <div class="member-avatar-stack">
+                <div class="member-avatar" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">이민</div>
+                <div class="member-avatar more">+3</div>
+              </div>
+            </div>
+            <div class="group-stats">
+              <div class="group-stat">
+                <span class="group-stat-value">4</span>
+                <span class="group-stat-label">멤버</span>
+              </div>
+              <div class="group-stat">
+                <span class="group-stat-value">7</span>
+                <span class="group-stat-label">역할</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group-card stagger-item">
+            <div class="group-card-header">
+              <div class="group-icon warning">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="group-actions">
+                <button class="action-btn edit" title="수정">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="action-btn delete" title="삭제">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <h3 class="group-name">Data Analysts</h3>
+            <p class="group-description">데이터 분석팀 그룹. BI 도구 및 분석 데이터 접근 권한 보유.</p>
+            <div class="group-members-preview">
+              <div class="member-avatar-stack">
+                <div class="member-avatar" style="background: var(--gradient-secondary);">박영</div>
+                <div class="member-avatar more">+6</div>
+              </div>
+            </div>
+            <div class="group-stats">
+              <div class="group-stat">
+                <span class="group-stat-value">7</span>
+                <span class="group-stat-label">멤버</span>
+              </div>
+              <div class="group-stat">
+                <span class="group-stat-value">2</span>
+                <span class="group-stat-label">역할</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group-card stagger-item">
+            <div class="group-card-header">
+              <div class="group-icon primary">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="group-actions">
+                <button class="action-btn edit" title="수정">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="action-btn delete" title="삭제">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <h3 class="group-name">Platform Admins</h3>
+            <p class="group-description">플랫폼 관리자 그룹. 시스템 전체 관리 권한을 가진 특권 그룹입니다.</p>
+            <div class="group-members-preview">
+              <div class="member-avatar-stack">
+                <div class="member-avatar">JL</div>
+                <div class="member-avatar more">+2</div>
+              </div>
+            </div>
+            <div class="group-stats">
+              <div class="group-stat">
+                <span class="group-stat-value">3</span>
+                <span class="group-stat-label">멤버</span>
+              </div>
+              <div class="group-stat">
+                <span class="group-stat-value">12</span>
+                <span class="group-stat-label">역할</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group-card stagger-item">
+            <div class="group-card-header">
+              <div class="group-icon secondary">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="group-actions">
+                <button class="action-btn edit" title="수정">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="action-btn delete" title="삭제">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <h3 class="group-name">Frontend Developers</h3>
+            <p class="group-description">프론트엔드 개발팀 그룹. 웹 애플리케이션 개발 관련 권한 보유.</p>
+            <div class="group-members-preview">
+              <div class="member-avatar-stack">
+                <div class="member-avatar" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">최서</div>
+                <div class="member-avatar more">+4</div>
+              </div>
+            </div>
+            <div class="group-stats">
+              <div class="group-stat">
+                <span class="group-stat-value">5</span>
+                <span class="group-stat-label">멤버</span>
+              </div>
+              <div class="group-stat">
+                <span class="group-stat-value">2</span>
+                <span class="group-stat-label">역할</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- List View (Hidden by default) -->
+        <div class="groups-list card" id="groupsList">
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>그룹명</th>
+                  <th>설명</th>
+                  <th>멤버</th>
+                  <th>역할</th>
+                  <th>생성일</th>
+                  <th style="width: 100px;">작업</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="cell-primary">Backend Developers</td>
+                  <td>백엔드 개발팀 그룹입니다.</td>
+                  <td>8</td>
+                  <td>3</td>
+                  <td>2024-06-15</td>
+                  <td>
+                    <div class="table-actions">
+                      <button class="action-btn edit" title="수정">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button class="action-btn delete" title="삭제">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="cell-primary">Data Engineers</td>
+                  <td>데이터 엔지니어링 팀.</td>
+                  <td>12</td>
+                  <td>5</td>
+                  <td>2024-07-20</td>
+                  <td>
+                    <div class="table-actions">
+                      <button class="action-btn edit" title="수정">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button class="action-btn delete" title="삭제">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Add Group Modal -->
+    <div class="modal-overlay" id="addGroupModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">새 그룹 생성</h3>
+          <button class="modal-close" onclick="closeModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">그룹명 *</label>
+            <input type="text" class="form-input" placeholder="그룹 이름을 입력하세요">
+          </div>
+          <div class="form-group">
+            <label class="form-label">설명</label>
+            <textarea class="form-textarea" placeholder="그룹에 대한 설명을 입력하세요"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">초기 멤버 (선택사항)</label>
+            <select class="form-select" multiple style="min-height: 120px;">
+              <option>김철수</option>
+              <option>박영희</option>
+              <option>이민수</option>
+              <option>정하늘</option>
+              <option>최서연</option>
+            </select>
+            <small class="text-muted" style="display: block; margin-top: 4px;">Ctrl/Cmd + 클릭으로 여러 명 선택</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal()">취소</button>
+          <button class="btn btn-primary">그룹 생성</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setView(view) {
+      const gridView = document.getElementById('groupsGrid');
+      const listView = document.getElementById('groupsList');
+      const gridBtn = document.getElementById('gridViewBtn');
+      const listBtn = document.getElementById('listViewBtn');
+
+      if (view === 'grid') {
+        gridView.classList.add('active');
+        listView.classList.remove('active');
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+      } else {
+        gridView.classList.remove('active');
+        listView.classList.add('active');
+        gridBtn.classList.remove('active');
+        listBtn.classList.add('active');
+      }
+    }
+
+    function openModal() {
+      document.getElementById('addGroupModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('addGroupModal').classList.remove('active');
+    }
+  </script>
+</body>
+</html>

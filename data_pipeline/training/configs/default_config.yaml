@@ -1,0 +1,112 @@
+# Default Training Configuration
+# Optimized for 2x RTX 2080 Ti (11GB VRAM each)
+
+# Model Configuration
+model:
+  base_model: "codellama/CodeLlama-7b-hf"
+  model_type: "qlora"  # qlora, lora, full
+  
+  # Alternative models (use smaller for limited VRAM)
+  # base_model: "codellama/CodeLlama-3b-hf"  # Smaller model
+  # base_model: "deepseek-ai/deepseek-coder-6.7b-instruct"
+  # base_model: "WizardLM/WizardCoder-Python-7B-V1.0"
+
+# LoRA Configuration
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules:
+    - "q_proj"
+    - "k_proj" 
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+# Quantization Configuration (for QLoRA)
+quantization:
+  use_4bit: true
+  bnb_4bit_compute_dtype: "float16"
+  bnb_4bit_quant_type: "nf4"
+  use_nested_quant: false
+
+# Training Hyperparameters
+training:
+  learning_rate: 2.0e-4
+  num_epochs: 3
+  batch_size: 4
+  gradient_accumulation_steps: 4
+  max_seq_length: 2048
+  warmup_ratio: 0.03
+  
+  # Optimizer
+  optimizer: "paged_adamw_32bit"
+  weight_decay: 0.001
+  max_grad_norm: 0.3
+  
+  # Learning rate scheduler
+  lr_scheduler_type: "cosine"
+  
+  # Mixed precision
+  fp16: true
+  bf16: false
+  
+  # Gradient checkpointing (saves memory)
+  gradient_checkpointing: true
+
+# Dataset Configuration
+dataset:
+  format: "jsonl"
+  prompt_template: "alpaca"
+  max_length: 2048
+  
+  # Filtering
+  dedup_enabled: true
+  min_sample_length: 10
+
+# Hardware Configuration
+hardware:
+  device_map: "auto"
+  max_memory:
+    "0": "10GiB"  # GPU 0
+    "1": "10GiB"  # GPU 1
+    "cpu": "60GiB"
+
+# Logging & Checkpoints
+logging:
+  logging_steps: 10
+  save_steps: 100
+  eval_steps: 100
+  save_total_limit: 3
+  report_to: "tensorboard"  # tensorboard, wandb, none
+
+# Evaluation Configuration
+evaluation:
+  eval_strategy: "steps"
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  
+  # Code execution tests
+  run_code_tests: true
+  code_test_timeout: 10  # seconds
+  min_pass_rate: 0.7  # 70% pass rate required
+
+# Deployment Configuration
+deployment:
+  # Ollama conversion
+  quantization_type: "q4_k_m"  # For GGUF conversion
+  
+  # Auto-deploy on success
+  auto_deploy: false
+  
+  # Rollback settings
+  keep_versions: 3
+
+# Paths
+paths:
+  data_dir: "/data/datasets"
+  model_dir: "/data/models"
+  log_dir: "/data/logs"
+  cache_dir: "/data/cache"
