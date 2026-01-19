@@ -41,19 +41,19 @@
 - 전체 시스템
     - Dag페이지
     
-    ![image.png](attachment:b524d8d3-6ce8-4615-ac42-415aa021fb73:image.png)
+    ![image.png](img/dag_page.png)
     
     - Code Section
     
-    ![image.png](attachment:b7000476-8652-4f3f-a12a-a0350abe9892:image.png)
+    ![image.png](img/code_section.png)
     
     - 모니터링 시스템
     
-    ![image.png](attachment:5239a465-81f8-4b7b-97b9-90ea09af42cc:image.png)
+    ![image.png](img/mornitoring.png)
     
 - ERD
 
-![image.png](attachment:56bbab8c-44ef-429f-a148-3124a023c34e:image.png)
+![image.png](img/erd.png)
 
 ## 포트폴리오
 
@@ -78,32 +78,32 @@
         - Ollama
 - 프로그램 구조
 
-![image.png](attachment:0fa9d09a-ae9e-4a08-83c8-fbbb1149af77:image.png)
+![image.png](img/program_structure.png)
 
 - 프로그램
     - AI Agent
     
-    ![image.png](attachment:033532e2-3a04-4e56-a547-086e43863ebc:image.png)
+    ![image.png](img/ai_agent.png)
     
     - 코드 작성
     
-    ![image.png](attachment:d4927a79-149c-495d-9e4e-1b214e995cfb:image.png)
+    ![image.png](img/agent_code.png)
     
 - 노드 연결
     
-    ![image.png](attachment:376605e7-96b9-4a92-ab2c-366014970a86:image.png)
+    ![image.png](img/node.png)
     
 - 성공 메시지
     
-    ![image.png](attachment:aeb78bee-cc08-42fc-bfe0-edb314868933:image.png)
+    ![image.png](img/message.png)
     
 - 파일 적재
     
-    ![image.png](attachment:3a7aa451-f02a-4f6c-b555-c60ae4dc0cff:image.png)
+    ![image.png](img/save.png)
     
 - 학습 자동화
 
-![image.png](attachment:5a6572ca-d24a-4455-b92d-7914762f8479:image.png)
+  ![image.png](img/automation.png)
 
 ### Kubernetes 기능 분석
 
@@ -131,7 +131,7 @@ cd ~/Demo_Project/data_pipeline/k8s && ./deploy.sh
 kubectl get pods -n data-pipeline
 ```
 
-![image.png](attachment:36e716ef-17a7-41ec-a45c-a3c5fee27e61:image.png)
+![image.png](img/deploy.png)
 
 - 포트포워딩 설정
 
